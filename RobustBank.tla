@@ -1,18 +1,30 @@
 ---- MODULE RobustBank ----
-EXTENDS Integers, TLC, Sequences
+EXTENDS Integers, TLC, Sequences, FiniteSets
+
+CONSTANT 
+    Clients,      \* クライアントの集合 (例: {"A", "B"})
+    MaxAmount,    \* 送金額の最大値 (例: 5)
+    InitBalance   \* 初期の所持金
+
+\* 集合 S の要素 x について、f[x] の合計を計算する演算子
+RECURSIVE SumSet(_, _)
+SumSet(S, f) == 
+  IF S = {} THEN 0
+  ELSE LET x == CHOOSE x \in S : TRUE  \* 集合から誰か1人選ぶ
+       IN  f[x] + SumSet(S \ {x}, f)   \* その人の分 + 残りの人たち
 
 (* --algorithm RobustBank
 variable 
-    accounts = [p \in {"Alice", "Bob", "Charlie"} |-> 10],
-    
-    \* 【追加】 送金中のため、どこの口座にもないお金
-    in_flight = 0;
+    accounts = [p \in Clients |-> InitBalance],
+    in_flight = 0;  \* 送金中のため、どこの口座にもないお金
 
 define
-    Total == accounts["Alice"] + accounts["Bob"] + accounts["Charlie"]
-    
-    \* 【修正】 不変条件：「口座合計」＋「送金中」＝ 30
-    MoneyIsConstant == Total + in_flight = 30
+    Total == SumSet(Clients, accounts)
+
+    \* 不変条件 : 口座残高と送金中のお金の合計は常に一定
+    MoneyIsConstant == Total + in_flight = Cardinality(Clients) * InitBalance
+    \* 不変条件 : 口座残高は負にならない
+    NoNegativeBalance == \A p \in Clients : accounts[p] >= 0
 end define;
 
 procedure Transfer(from, to, amount)
@@ -20,26 +32,24 @@ begin
   Tx:
     if accounts[from] >= amount then
         accounts[from] := accounts[from] - amount;
-        
-        \* 口座から引くと同時に「送金中」に加算する（これならお金は消えない！）
-        in_flight      := in_flight      + amount; 
+        in_flight      := in_flight      + amount; \* 送金中に加える
         
         Deposit:
-        in_flight    := in_flight    - amount; \* 送金中から減らして
-        accounts[to] := accounts[to] + amount; \* 口座に入れる
+            in_flight    := in_flight    - amount; \* 送金中から減らして
+            accounts[to] := accounts[to] + amount; \* 口座に入れる
     end if;
     
   Ret:
     return;
 end procedure;
 
-process Client \in {"Alice", "Bob", "Charlie"}
+process Client \in Clients
 begin
   Loop:
     while TRUE do
       CallTx:
-        with receiver \in {"Alice", "Bob", "Charlie"} \ {self},
-             amt      \in 1..5 
+        with receiver \in Clients \ {self},
+             amt      \in 1..MaxAmount 
         do
            call Transfer(self, receiver, amt);
         end with;
@@ -55,19 +65,21 @@ CONSTANT defaultInitValue
 VARIABLES pc, accounts, in_flight, stack
 
 (* define statement *)
-Total == accounts["Alice"] + accounts["Bob"] + accounts["Charlie"]
+Total == SumSet(Clients, accounts)
 
 
-MoneyIsConstant == Total + in_flight = 30
+MoneyIsConstant == Total + in_flight = Cardinality(Clients) * InitBalance
+
+NoNegativeBalance == \A p \in Clients : accounts[p] >= 0
 
 VARIABLES from, to, amount
 
 vars == << pc, accounts, in_flight, stack, from, to, amount >>
 
-ProcSet == ({"Alice", "Bob", "Charlie"})
+ProcSet == (Clients)
 
 Init == (* Global variables *)
-        /\ accounts = [p \in {"Alice", "Bob", "Charlie"} |-> 10]
+        /\ accounts = [p \in Clients |-> InitBalance]
         /\ in_flight = 0
         (* Procedure Transfer *)
         /\ from = [ self \in ProcSet |-> defaultInitValue]
@@ -106,8 +118,8 @@ Loop(self) == /\ pc[self] = "Loop"
               /\ UNCHANGED << accounts, in_flight, stack, from, to, amount >>
 
 CallTx(self) == /\ pc[self] = "CallTx"
-                /\ \E receiver \in {"Alice", "Bob", "Charlie"} \ {self}:
-                     \E amt \in 1..5:
+                /\ \E receiver \in Clients \ {self}:
+                     \E amt \in 1..MaxAmount:
                        /\ /\ amount' = [amount EXCEPT ![self] = amt]
                           /\ from' = [from EXCEPT ![self] = self]
                           /\ stack' = [stack EXCEPT ![self] = << [ procedure |->  "Transfer",
@@ -128,10 +140,9 @@ LoopEnd(self) == /\ pc[self] = "LoopEnd"
 Client(self) == Loop(self) \/ CallTx(self) \/ LoopEnd(self)
 
 Next == (\E self \in ProcSet: Transfer(self))
-           \/ (\E self \in {"Alice", "Bob", "Charlie"}: Client(self))
+           \/ (\E self \in Clients: Client(self))
 
 Spec == Init /\ [][Next]_vars
 
 \* END TRANSLATION
-
 ====
