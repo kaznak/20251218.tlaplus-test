@@ -1,2 +1,6 @@
+# TLA+ / PlusCal related
 *.old
 *.out
+*.log
+.tlacache/
+states/
