@@ -1,8 +1,10 @@
 ---- MODULE duplicates ----
 EXTENDS Integers, Sequences, TLC
 
+S == 1..10
+
 (*--algorithm dup
-  variable seq = <<1, 2, 3, 2>>;
+  variable seq \in S \X S \X S \X S;
   index = 1;
   seen = {};
   is_unique = TRUE;
@@ -18,13 +20,13 @@ begin
       index := index + 1;
     end while;
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "a2a3a413" /\ chksum(tla) = "f0e2a9b0")
+\* BEGIN TRANSLATION (chksum(pcal) = "e8cc16ef" /\ chksum(tla) = "ee8efe86")
 VARIABLES pc, seq, index, seen, is_unique
 
 vars == << pc, seq, index, seen, is_unique >>
 
 Init == (* Global variables *)
-        /\ seq = <<1, 2, 3, 2>>
+        /\ seq \in S \X S \X S \X S
         /\ index = 1
         /\ seen = {}
         /\ is_unique = TRUE
