@@ -47,3 +47,20 @@ NoLoop(src, dst) == src # dst
 Edges == { e \in Nodes \X Nodes : NoLoop(e[1], e[2]) }
 ====
 ```
+
+### 関数と集合を意識して記述する
+
+例えば、長さが 1 から 3 までの整数列の集合を定義したい場合、以下のように記述できる。
+
+```tla+
+---- MODULE scratch ----
+EXTENDS Integers, TLC, Sequences
+
+S == 1..3
+SeqLens == 1..3
+BoundedSeqs(s, seqLens) == UNION { [ 1..k -> s ] : k \in seqLens }
+MySeqs == BoundedSeqs(S, SeqLens)
+====
+```
+
+配列は` <index> -> <value>`の関数として定義されることを意識すると、様々な長さの配列を簡単に扱うことができる。
