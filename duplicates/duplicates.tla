@@ -1,5 +1,5 @@
 ---- MODULE duplicates ----
-EXTENDS Integers, Sequences, TLC, FiniteSets
+EXTENDS Integers, Sequences, TLC
 
 S == 1..10
 
@@ -16,7 +16,10 @@ define
         /\ seen \subseteq S
         /\ index \in 1..Len(seq)+1
 
-    IsUnique(s) == Cardinality(seen) = Len(s)
+    IsUnique(s) ==
+        \A i \in 1..Len(s):
+            \A j \in (1..Len(s)) \ {i}:
+                s[i] # s[j]
     IsCorrect == pc = "Done" => is_unique = IsUnique(seq)
 end define; 
 
@@ -31,7 +34,7 @@ begin
       index := index + 1;
     end while;
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "f51a69de" /\ chksum(tla) = "e9ca9e11")
+\* BEGIN TRANSLATION (chksum(pcal) = "2eac7e28" /\ chksum(tla) = "6384f535")
 VARIABLES pc, seq, index, seen, is_unique
 
 (* define statement *)
@@ -40,7 +43,10 @@ TypeInvariant ==
     /\ seen \subseteq S
     /\ index \in 1..Len(seq)+1
 
-IsUnique(s) == Cardinality(seen) = Len(s)
+IsUnique(s) ==
+    \A i \in 1..Len(s):
+        \A j \in (1..Len(s)) \ {i}:
+            s[i] # s[j]
 IsCorrect == pc = "Done" => is_unique = IsUnique(seq)
 
 
