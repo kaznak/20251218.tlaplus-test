@@ -19,18 +19,31 @@
 
 ## ヒント
 
-### 集合内包表記では複数の変数を使えない
+### 直積を積極的に使う
 
-以下は誤り
+グラフの定義の例
 
 ```tla+
+---- MODULE scratch ----
+EXTENDS Integers, TLC, Sequences
 Nodes == 1..3
-Edges == { <<src, dst>> | src \in Nodes, dst \in Nodes \ {src} }
+Edges == { e \in Nodes \X Nodes }
+====
 ```
 
-正しくは以下の通り
+以下の Edges の定義はエラーを引き起こす事があるほか、フィルタリングをすると面倒くさくなる。
+
+1. `Edges == { <<src, dst>> : src, dst \in Nodes }`
+    - どうも vscode 拡張ではエラーが起きるケースがあるっぽい？
+2. `Edges == { <<src, dst>> : src \in Nodes, dst \in Nodes }`
+
+直積の場合はフィルタリングを分離出来たりするのでよい。
 
 ```tla+
+---- MODULE scratch ----
+EXTENDS Integers, TLC, Sequences
 Nodes == 1..3
-Edges == { e \in Nodes \X Nodes : e[1] # e[2] }
+NoLoop(src, dst) == src # dst
+Edges == { e \in Nodes \X Nodes : NoLoop(e[1], e[2]) }
+====
 ```
