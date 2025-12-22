@@ -16,3 +16,21 @@
 - TLA+:Evaluate Expression
     - TLA+ 式の評価
     - Learn TLA+ で言及される Scratch.tla の式評価を行う際には、この機能を使用する
+
+## ヒント
+
+### 集合内包表記では複数の変数を使えない
+
+以下は誤り
+
+```tla+
+Nodes == 1..3
+Edges == { <<src, dst>> | src \in Nodes, dst \in Nodes \ {src} }
+```
+
+正しくは以下の通り
+
+```tla+
+Nodes == 1..3
+Edges == { e \in Nodes \X Nodes : e[1] # e[2] }
+```
