@@ -15,3 +15,4 @@
     - TLC モデルチェッカーを使用して TLA+ モデルを検証
 - TLA+:Evaluate Expression
     - TLA+ 式の評価
+    - Learn TLA+ で言及される Scratch.tla の式評価を行う際には、この機能を使用する
