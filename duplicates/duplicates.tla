@@ -1,7 +1,8 @@
 ---- MODULE duplicates ----
-EXTENDS Integers, Sequences, TLC
+EXTENDS Integers, Sequences, TLC, FiniteSets
 
-S == 1..10
+CONSTANT S
+    ASSUME Cardinality(S) >= 4
 
 (*--algorithm dup
 variable
