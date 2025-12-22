@@ -2,6 +2,7 @@
     "tlaplus.tlc.modelChecker.options": "-workers 1 -coverage 1",
     "cSpell.words": [
         "chksum",
-        "pcal"
+        "pcal",
+        "subseteq"
     ]
 }
